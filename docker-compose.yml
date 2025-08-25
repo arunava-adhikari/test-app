@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  vpn-tester:
+    build: .
+    container_name: vpn-geoblocking-tester
+    volumes:
+      # Mount the config file for easy updates
+      - ./vpn-test-config.json:/app/vpn-test-config.json:ro
+      # Mount a reports directory for output
+      - ./reports:/app/reports
+      # Mount the current directory for development
+      - .:/app
+    environment:
+      - NODE_ENV=production
+      - PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+      - PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+    ports:
+      - "8080:8080"
+    # Run in interactive mode for VPN testing
+    stdin_open: true
+    tty: true
+    # Restart policy for long-running tests
+    restart: unless-stopped
+    # Resource limits for lightweight operation
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'

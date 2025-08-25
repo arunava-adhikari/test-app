@@ -1,0 +1,201 @@
+{
+  "testSuite": "Integrated VPN Geo-Blocking Test",
+  "timestamp": "2025-08-21T15:17:27.167Z",
+  "config": {
+    "apiUrl": "http://localhost:8080",
+    "vpnProvider": "auto",
+    "testCountries": [
+      "US",
+      "DE",
+      "GB",
+      "FR"
+    ],
+    "blockedCountries": [
+      "DE",
+      "RU"
+    ],
+    "headless": false,
+    "slowMo": 1000,
+    "timeout": 30000,
+    "reportFile": "vpn-test-report.json",
+    "name": "Basic VPN Test",
+    "description": "Test core geo-blocking functionality"
+  },
+  "vpnProvider": "NordVPN",
+  "results": [
+    {
+      "type": "baseline",
+      "data": {
+        "location": {
+          "ip": "43.251.171.131",
+          "country": "IN",
+          "countryName": "India",
+          "city": "Demo City",
+          "region": "Demo Region",
+          "isp": "Demo ISP"
+        },
+        "timestamp": "2025-08-21T15:15:38.962Z"
+      },
+      "timestamp": "2025-08-21T15:15:38.962Z"
+    },
+    {
+      "type": "baseline_access",
+      "data": {
+        "allowed": true,
+        "blocked": false,
+        "status": 200,
+        "data": {
+          "client_ip": "::1",
+          "country_code": "IN",
+          "message": "Access granted! You can access this API.",
+          "server_time": 1755789340,
+          "success": true,
+          "timestamp": "2025-08-21T20:45:40+05:30"
+        }
+      },
+      "timestamp": "2025-08-21T15:15:41.664Z"
+    },
+    {
+      "type": "vpn_test",
+      "data": {
+        "country": "US",
+        "timestamp": "2025-08-21T15:15:44.695Z",
+        "vpnConnection": null,
+        "locationAfterVPN": null,
+        "apiAccess": null,
+        "expectedBlocked": false,
+        "success": false,
+        "error": "VPN connection failed"
+      },
+      "timestamp": "2025-08-21T15:16:02.302Z"
+    },
+    {
+      "type": "vpn_test",
+      "data": {
+        "country": "US",
+        "timestamp": "2025-08-21T15:15:44.695Z",
+        "vpnConnection": null,
+        "locationAfterVPN": null,
+        "apiAccess": null,
+        "expectedBlocked": false,
+        "success": false,
+        "error": "VPN connection failed"
+      },
+      "timestamp": "2025-08-21T15:16:07.894Z"
+    },
+    {
+      "type": "vpn_test",
+      "data": {
+        "country": "DE",
+        "timestamp": "2025-08-21T15:16:09.898Z",
+        "vpnConnection": null,
+        "locationAfterVPN": null,
+        "apiAccess": null,
+        "expectedBlocked": true,
+        "success": false,
+        "error": "VPN connection failed"
+      },
+      "timestamp": "2025-08-21T15:16:26.671Z"
+    },
+    {
+      "type": "vpn_test",
+      "data": {
+        "country": "DE",
+        "timestamp": "2025-08-21T15:16:09.898Z",
+        "vpnConnection": null,
+        "locationAfterVPN": null,
+        "apiAccess": null,
+        "expectedBlocked": true,
+        "success": false,
+        "error": "VPN connection failed"
+      },
+      "timestamp": "2025-08-21T15:16:31.492Z"
+    },
+    {
+      "type": "vpn_test",
+      "data": {
+        "country": "GB",
+        "timestamp": "2025-08-21T15:16:33.503Z",
+        "vpnConnection": null,
+        "locationAfterVPN": null,
+        "apiAccess": null,
+        "expectedBlocked": false,
+        "success": false,
+        "error": "VPN connection failed"
+      },
+      "timestamp": "2025-08-21T15:16:51.268Z"
+    },
+    {
+      "type": "vpn_test",
+      "data": {
+        "country": "GB",
+        "timestamp": "2025-08-21T15:16:33.503Z",
+        "vpnConnection": null,
+        "locationAfterVPN": null,
+        "apiAccess": null,
+        "expectedBlocked": false,
+        "success": false,
+        "error": "VPN connection failed"
+      },
+      "timestamp": "2025-08-21T15:16:58.173Z"
+    },
+    {
+      "type": "vpn_test",
+      "data": {
+        "country": "FR",
+        "timestamp": "2025-08-21T15:17:00.180Z",
+        "vpnConnection": null,
+        "locationAfterVPN": null,
+        "apiAccess": null,
+        "expectedBlocked": false,
+        "success": false,
+        "error": "VPN connection failed"
+      },
+      "timestamp": "2025-08-21T15:17:19.986Z"
+    },
+    {
+      "type": "vpn_test",
+      "data": {
+        "country": "FR",
+        "timestamp": "2025-08-21T15:17:00.180Z",
+        "vpnConnection": null,
+        "locationAfterVPN": null,
+        "apiAccess": null,
+        "expectedBlocked": false,
+        "success": false,
+        "error": "VPN connection failed"
+      },
+      "timestamp": "2025-08-21T15:17:25.148Z"
+    }
+  ],
+  "summary": {
+    "totalTests": 8,
+    "successful": 0,
+    "failed": 8,
+    "blocked": 0,
+    "allowed": 0,
+    "vpnProvider": "NordVPN",
+    "baselineLocation": {
+      "ip": "43.251.171.131",
+      "country": "IN",
+      "countryName": "India",
+      "city": "Demo City",
+      "region": "Demo Region",
+      "isp": "Demo ISP"
+    },
+    "countriesTested": [
+      "US",
+      "US",
+      "DE",
+      "DE",
+      "GB",
+      "GB",
+      "FR",
+      "FR"
+    ],
+    "blockedCountries": [
+      "DE",
+      "RU"
+    ]
+  }
+}

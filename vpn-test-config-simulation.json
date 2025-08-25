@@ -1,0 +1,21 @@
+{
+    "testConfigurations": {
+      "simulation": {
+        "name": "Simulation Mode Test",
+        "description": "Test geo-blocking functionality using simulation mode",
+        "apiUrl": "http://localhost:8080",
+        "vpnProvider": "simulation",
+        "testCountries": ["US", "DE", "GB", "FR"],
+        "blockedCountries": ["DE", "RU"],
+        "headless": true,
+        "slowMo": 0,
+        "timeout": 20000,
+        "useSimulation": true
+      }
+    },
+    "simulation": {
+      "enabled": true,
+      "apiEndpoint": "/api/simulate-vpn",
+      "simulateVPNChanges": true
+    }
+  }

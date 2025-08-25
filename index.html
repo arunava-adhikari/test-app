@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopify Geo-Blocking Management</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .step-container {
+            margin-bottom: 40px;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 25px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        
+        .step-container:hover {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .step-number {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .step-title {
+            font-size: 1.5rem;
+            color: #2d3748;
+            font-weight: 600;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(45deg, #e53e3e, #c53030);
+        }
+        
+        .btn-success {
+            background: linear-gradient(45deg, #38a169, #2f855a);
+        }
+        
+        .status {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+        
+        .status.loading {
+            background: #bee3f8;
+            color: #2b6cb0;
+        }
+        
+        .status.success {
+            background: #c6f6d5;
+            color: #2f855a;
+        }
+        
+        .status.error {
+            background: #fed7d7;
+            color: #c53030;
+        }
+        
+        .warning {
+            background: #fef5e7;
+            border: 1px solid #f6ad55;
+            color: #c05621;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .country-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .country-card {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .country-card:hover {
+            border-color: #667eea;
+            transform: scale(1.02);
+        }
+        
+        .country-card.selected {
+            border-color: #e53e3e;
+            background: #fed7d7;
+        }
+        
+        .chart-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .validation-results {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .progress-bar {
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            height: 20px;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌍 Shopify Geo-Blocking Management System</h1>
+        
+        <!-- Step 1: Retrieve Customer Data -->
+        <div class="step-container">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <div class="step-title">Retrieve Customer Data</div>
+            </div>
+            
+            <div class="form-group">
+                <label>Shopify Store URL:</label>
+                <input type="text" id="shopUrl" placeholder="your-store.myshopify.com" style="width: 100%; padding: 10px; margin: 10px 0; border: 2px solid #e2e8f0; border-radius: 8px;">
+                
+                <label>API Key:</label>
+                <input type="password" id="apiKey" placeholder="Enter your Shopify API key" style="width: 100%; padding: 10px; margin: 10px 0; border: 2px solid #e2e8f0; border-radius: 8px;">
+            </div>
+            
+            <button class="btn" onclick="fetchCustomerData()" id="fetchBtn">
+                <span id="fetchSpinner" class="loading-spinner hidden"></span>
+                Fetch Customer Data
+            </button>
+            
+            <div id="customerStatus" class="status hidden"></div>
+            
+            <div id="customerChart" class="chart-container hidden">
+                <canvas id="customerCountryChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Step 2: Analyze Business Presence -->
+        <div class="step-container">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <div class="step-title">Analyze Business Presence</div>
+            </div>
+            
+            <button class="btn" onclick="analyzeBusinessPresence()" id="analyzeBtn" disabled>
+                <span id="analyzeSpinner" class="loading-spinner hidden"></span>
+                Analyze Business Presence
+            </button>
+            
+            <div id="analysisStatus" class="status hidden"></div>
+            
+            <div id="nonBusinessCountries" class="country-grid hidden"></div>
+        </div>
+        
+        <!-- Step 3: Confirm and Block -->
+        <div class="step-container">
+            <div class="step-header">
+                <div class="step-number">3</div>
+                <div class="step-title">Confirm & Block Countries</div>
+            </div>
+            
+            <div id="blockingConfirmation" class="hidden">
+                <p><strong>⚠️ Countries to be blocked:</strong></p>
+                <div id="selectedCountries"></div>
+                
+                <div style="margin: 20px 0;">
+                    <button class="btn btn-danger" onclick="confirmBlocking()">
+                        <span id="blockSpinner" class="loading-spinner hidden"></span>
+                        Confirm & Block Selected Countries
+                    </button>
+                    <button class="btn" onclick="cancelBlocking()">Cancel</button>
+                </div>
+            </div>
+            
+            <div id="blockingStatus" class="status hidden"></div>
+        </div>
+        
+        <!-- Step 4: Test Country Blocking -->
+        <div class="step">
+            <h2>🛡️ Step 4: Test Country Blocking</h2>
+            <p>Test the geo-blocking mechanism by checking your current location and testing API access.</p>
+            
+            <div class="controls">
+                <button id="checkIPBtn" class="btn btn-primary">Check My Location</button>
+                <button id="testAccessBtn" class="btn btn-secondary">Test API Access</button>
+                <button id="simulateVPNBtn" class="btn btn-warning">Simulate VPN Access</button>
+            </div>
+            
+            <div id="ipSpinner" class="spinner hidden"></div>
+            <div id="locationStatus" class="status hidden"></div>
+            
+            <div id="locationInfo" class="card hidden">
+                <h3>📍 Your Location Information</h3>
+                <div id="locationDetails"></div>
+                </div>
+            
+            <div id="accessTest" class="card hidden">
+                <h3>🔐 API Access Test Results</h3>
+                <div id="accessResults"></div>
+            </div>
+            
+            <div id="vpnSimulation" class="card hidden">
+                <h3>🌐 VPN Simulation</h3>
+                <p>Select a country to simulate VPN access from:</p>
+                <select id="vpnCountrySelect">
+                    <option value="US">United States (US)</option>
+                    <option value="DE">Germany (DE)</option>
+                    <option value="RU">Russia (RU)</option>
+                    <option value="CN">China (CN)</option>
+                    <option value="FR">France (FR)</option>
+                    <option value="GB">United Kingdom (GB)</option>
+                    <option value="AU">Australia (AU)</option>
+                </select>
+                <button id="simulateAccessBtn" class="btn btn-danger">Test Access from Selected Country</button>
+                <div id="simulationResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'http://localhost:8080/api';
+        
+        // State management
+        let customerData = null;
+        let nonBusinessCountriesList = [];
+        let selectedCountriesForBlocking = [];
+        let blockedCountries = [];
+        
+        // Step 1: Fetch Customer Data
+        async function fetchCustomerData() {
+            const btn = document.getElementById('fetchBtn');
+            const spinner = document.getElementById('fetchSpinner');
+            const status = document.getElementById('customerStatus');
+            const shopUrl = document.getElementById('shopUrl').value;
+            const apiKey = document.getElementById('apiKey').value;
+            
+            if (!shopUrl || !apiKey) {
+                alert('Please enter both Shop URL and API Key');
+                return;
+            }
+            
+            btn.disabled = true;
+            spinner.classList.remove('hidden');
+            status.className = 'status loading';
+            status.classList.remove('hidden');
+            status.textContent = 'Fetching customer data from Shopify API...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/customers`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        shop_url: shopUrl,
+                        api_key: apiKey
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                // Process customer data for chart
+                customerData = {};
+                if (data.customer_countries && data.customer_countries.length > 0) {
+                    data.customer_countries.forEach(customer => {
+                        if (customer.country_codes && Array.isArray(customer.country_codes)) {
+                        customer.country_codes.forEach(countryCode => {
+                                if (countryCode) {
+                            const countryName = getCountryName(countryCode);
+                            customerData[countryName] = (customerData[countryName] || 0) + 1;
+                                }
+                            });
+                        }
+                    });
+                    
+                    // If no valid data was processed, show fallback
+                    if (Object.keys(customerData).length === 0) {
+                        customerData = { 'No Data Available': 0 };
+                    }
+                }
+                
+                spinner.classList.add('hidden');
+                status.className = 'status success';
+                status.textContent = `✅ Successfully retrieved ${data.total_customers} customers from ${Object.keys(customerData).length} countries`;
+                
+                // Show chart
+                displayCustomerChart();
+                
+                // Enable next step
+                document.getElementById('analyzeBtn').disabled = false;
+                
+            } catch (error) {
+                spinner.classList.add('hidden');
+                status.className = 'status error';
+                status.textContent = `❌ Error: ${error.message}`;
+                console.error('API Error:', error);
+            }
+            
+            btn.disabled = false;
+        }
+        
+        // Helper function to convert country codes to names
+        function getCountryName(countryCode) {
+            const countryNames = {
+            'AF': 'Afghanistan', 'AL': 'Albania', 'DZ': 'Algeria', 'AS': 'American Samoa', 'AD': 'Andorra',
+            'AO': 'Angola', 'AI': 'Anguilla', 'AQ': 'Antarctica', 'AG': 'Antigua and Barbuda', 'AR': 'Argentina',
+            'AM': 'Armenia', 'AW': 'Aruba', 'AU': 'Australia', 'AT': 'Austria', 'AZ': 'Azerbaijan',
+            'BS': 'Bahamas', 'BH': 'Bahrain', 'BD': 'Bangladesh', 'BB': 'Barbados', 'BY': 'Belarus',
+            'BE': 'Belgium', 'BZ': 'Belize', 'BJ': 'Benin', 'BM': 'Bermuda', 'BT': 'Bhutan',
+            'BO': 'Bolivia', 'BA': 'Bosnia and Herzegovina', 'BW': 'Botswana', 'BR': 'Brazil', 'BN': 'Brunei',
+            'BG': 'Bulgaria', 'BF': 'Burkina Faso', 'BI': 'Burundi', 'CV': 'Cape Verde', 'KH': 'Cambodia',
+            'CM': 'Cameroon', 'CA': 'Canada', 'KY': 'Cayman Islands', 'CF': 'Central African Republic', 'TD': 'Chad',
+            'CL': 'Chile', 'CN': 'China', 'CO': 'Colombia', 'KM': 'Comoros', 'CG': 'Congo', 'CR': 'Costa Rica',
+            'CI': 'Côte d\'Ivoire', 'HR': 'Croatia', 'CU': 'Cuba', 'CY': 'Cyprus', 'CZ': 'Czech Republic',
+            'DK': 'Denmark', 'DJ': 'Djibouti', 'DM': 'Dominica', 'DO': 'Dominican Republic', 'EC': 'Ecuador',
+            'EG': 'Egypt', 'SV': 'El Salvador', 'GQ': 'Equatorial Guinea', 'ER': 'Eritrea', 'EE': 'Estonia',
+            'ET': 'Ethiopia', 'FJ': 'Fiji', 'FI': 'Finland', 'FR': 'France', 'GA': 'Gabon', 'GM': 'Gambia',
+            'GE': 'Georgia', 'DE': 'Germany', 'GH': 'Ghana', 'GR': 'Greece', 'GD': 'Grenada', 'GT': 'Guatemala',
+            'GN': 'Guinea', 'GW': 'Guinea-Bissau', 'GY': 'Guyana', 'HT': 'Haiti', 'HN': 'Honduras', 'HU': 'Hungary',
+            'IS': 'Iceland', 'IN': 'India', 'ID': 'Indonesia', 'IR': 'Iran', 'IQ': 'Iraq', 'IE': 'Ireland',
+            'IL': 'Israel', 'IT': 'Italy', 'JM': 'Jamaica', 'JP': 'Japan', 'JO': 'Jordan', 'KZ': 'Kazakhstan',
+            'KE': 'Kenya', 'KI': 'Kiribati', 'KP': 'North Korea', 'KR': 'South Korea', 'KW': 'Kuwait', 'KG': 'Kyrgyzstan',
+            'LA': 'Laos', 'LV': 'Latvia', 'LB': 'Lebanon', 'LS': 'Lesotho', 'LR': 'Liberia', 'LY': 'Libya',
+            'LI': 'Liechtenstein', 'LT': 'Lithuania', 'LU': 'Luxembourg', 'MG': 'Madagascar', 'MW': 'Malawi',
+            'MY': 'Malaysia', 'MV': 'Maldives', 'ML': 'Mali', 'MT': 'Malta', 'MH': 'Marshall Islands', 'MR': 'Mauritania',
+            'MU': 'Mauritius', 'MX': 'Mexico', 'FM': 'Micronesia', 'MD': 'Moldova', 'MC': 'Monaco', 'MN': 'Mongolia',
+            'ME': 'Montenegro', 'MA': 'Morocco', 'MZ': 'Mozambique', 'MM': 'Myanmar', 'NA': 'Namibia', 'NR': 'Nauru',
+            'NP': 'Nepal', 'NL': 'Netherlands', 'NZ': 'New Zealand', 'NI': 'Nicaragua', 'NE': 'Niger', 'NG': 'Nigeria',
+            'MK': 'North Macedonia', 'NO': 'Norway', 'OM': 'Oman', 'PK': 'Pakistan', 'PW': 'Palau', 'PS': 'Palestine',
+            'PA': 'Panama', 'PG': 'Papua New Guinea', 'PY': 'Paraguay', 'PE': 'Peru', 'PH': 'Philippines', 'PL': 'Poland',
+            'PT': 'Portugal', 'QA': 'Qatar', 'RO': 'Romania', 'RU': 'Russia', 'RW': 'Rwanda', 'KN': 'Saint Kitts and Nevis',
+            'LC': 'Saint Lucia', 'VC': 'Saint Vincent and the Grenadines', 'WS': 'Samoa', 'SM': 'San Marino',
+            'ST': 'São Tomé and Príncipe', 'SA': 'Saudi Arabia', 'SN': 'Senegal', 'RS': 'Serbia', 'SC': 'Seychelles',
+            'SL': 'Sierra Leone', 'SG': 'Singapore', 'SK': 'Slovakia', 'SI': 'Slovenia', 'SB': 'Solomon Islands',
+            'SO': 'Somalia', 'ZA': 'South Africa', 'SS': 'South Sudan', 'ES': 'Spain', 'LK': 'Sri Lanka', 'SD': 'Sudan',
+            'SR': 'Suriname', 'SE': 'Sweden', 'CH': 'Switzerland', 'SY': 'Syria', 'TW': 'Taiwan', 'TJ': 'Tajikistan',
+            'TZ': 'Tanzania', 'TH': 'Thailand', 'TL': 'Timor-Leste', 'TG': 'Togo', 'TO': 'Tonga', 'TT': 'Trinidad and Tobago',
+            'TN': 'Tunisia', 'TR': 'Turkey', 'TM': 'Turkmenistan', 'TV': 'Tuvalu', 'UG': 'Uganda', 'UA': 'Ukraine',
+            'AE': 'United Arab Emirates', 'GB': 'United Kingdom', 'US': 'United States', 'UY': 'Uruguay', 'UZ': 'Uzbekistan',
+            'VU': 'Vanuatu', 'VE': 'Venezuela', 'VN': 'Vietnam', 'YE': 'Yemen', 'ZM': 'Zambia', 'ZW': 'Zimbabwe'
+            };
+            return countryNames[countryCode] || countryCode;
+        }
+        
+        function displayCustomerChart() {
+            const chartContainer = document.getElementById('customerChart');
+            chartContainer.classList.remove('hidden');
+            
+            const ctx = document.getElementById('customerCountryChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(customerData),
+                    datasets: [{
+                        label: 'Customers by Country',
+                        data: Object.values(customerData),
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Customer Distribution by Country'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Step 2: Analyze Business Presence
+        async function analyzeBusinessPresence() {
+            const btn = document.getElementById('analyzeBtn');
+            const spinner = document.getElementById('analyzeSpinner');
+            const status = document.getElementById('analysisStatus');
+            
+            btn.disabled = true;
+            spinner.classList.remove('hidden');
+            status.className = 'status loading';
+            status.classList.remove('hidden');
+            status.textContent = 'Analyzing business presence across countries...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/analyze-business-presence`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                // Convert country codes to readable format
+                nonBusinessCountriesList = data.countries_without_business.map(countryCode => ({
+                    country: getCountryName(countryCode),
+                    countryCode: countryCode,
+                    // customerCount: Math.floor(Math.random() * 5) // Random low count for demo
+                }));
+                
+                spinner.classList.add('hidden');
+                status.className = 'status success';
+                status.textContent = `✅ Analysis complete. Found ${nonBusinessCountriesList.length} countries with no business presence`;
+                
+                displayNonBusinessCountries();
+                
+            } catch (error) {
+                spinner.classList.add('hidden');
+                status.className = 'status error';
+                status.textContent = `❌ Error: ${error.message}`;
+                console.error('API Error:', error);
+            }
+            
+            btn.disabled = false;
+        }
+        
+        function displayNonBusinessCountries() {
+            const container = document.getElementById('nonBusinessCountries');
+            container.classList.remove('hidden');
+            container.innerHTML = '';
+            
+            nonBusinessCountriesList.forEach(({country, countryCode, customerCount}) => {
+                const card = document.createElement('div');
+                card.className = 'country-card';
+                card.innerHTML = `
+                    <h4>${country} (${countryCode})</h4>
+                    <p>No business presence detected</p>
+                    <small>Country Code: ${countryCode}</small>
+                `;
+                card.onclick = () => toggleCountrySelection({country, countryCode}, card);
+                container.appendChild(card);
+            });
+            
+            // Show blocking confirmation
+            document.getElementById('blockingConfirmation').classList.remove('hidden');
+        }
+        
+        function toggleCountrySelection(countryData, cardElement) {
+            const countryDisplay = `${countryData.country} (${countryData.countryCode})`;
+            const index = selectedCountriesForBlocking.findIndex(item => 
+                item.countryCode === countryData.countryCode
+            );
+            
+            if (index > -1) {
+                selectedCountriesForBlocking.splice(index, 1);
+                cardElement.classList.remove('selected');
+            } else {
+                selectedCountriesForBlocking.push(countryData);
+                cardElement.classList.add('selected');
+            }
+            updateSelectedCountriesDisplay();
+        }
+        
+        function updateSelectedCountriesDisplay() {
+            const container = document.getElementById('selectedCountries');
+            if (selectedCountriesForBlocking.length > 0) {
+                const countryList = selectedCountriesForBlocking
+                    .map(item => `${item.country} (${item.countryCode})`)
+                    .join(', ');
+                container.innerHTML = `<p><strong>${countryList}</strong></p>`;
+            } else {
+                container.innerHTML = '<p><em>Click on countries above to select them for blocking</em></p>';
+            }
+        }
+        
+        // Step 3: Confirm and Block
+        async function confirmBlocking() {
+            if (selectedCountriesForBlocking.length === 0) {
+                alert('Please select at least one country to block');
+                return;
+            }
+            
+            const btn = document.querySelector('.btn-danger');
+            const spinner = document.getElementById('blockSpinner');
+            const status = document.getElementById('blockingStatus');
+            
+            btn.disabled = true;
+            spinner.classList.remove('hidden');
+            status.className = 'status loading';
+            status.classList.remove('hidden');
+            status.textContent = `✅ Successfully blocked ${selectedCountriesForBlocking.length} countries: ${selectedCountriesForBlocking.map(item => `${item.country} (${item.countryCode})`).join(', ')}`;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/block-countries`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        countries: selectedCountriesForBlocking.map(item => item.countryCode || item.country)
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                blockedCountries = [...selectedCountriesForBlocking];
+                
+                spinner.classList.add('hidden');
+                status.className = 'status success';
+                status.textContent = `✅ Successfully blocked ${blockedCountries.length} countries: ${blockedCountries.map(item => `${item.country} (${item.countryCode})`).join(', ')}`;
+                
+                // Enable validation (if validate button exists)
+                const validateBtn = document.getElementById('validateBtn');
+                if (validateBtn) {
+                    validateBtn.disabled = false;
+                }
+                
+            } catch (error) {
+                spinner.classList.add('hidden');
+                status.className = 'status error';
+                status.textContent = `❌ Error: ${error.message}`;
+                console.error('API Error:', error);
+            }
+            
+            btn.disabled = false;
+        }
+        
+        function cancelBlocking() {
+            selectedCountriesForBlocking = [];
+            document.querySelectorAll('.country-card.selected').forEach(card => {
+                card.classList.remove('selected');
+            });
+            updateSelectedCountriesDisplay();
+        }
+        
+        // Step 4: Country Blocking Test Functions
+        async function checkMyLocation() {
+            const btn = document.getElementById('checkIPBtn');
+            const spinner = document.getElementById('ipSpinner');
+            const status = document.getElementById('locationStatus');
+            const infoDiv = document.getElementById('locationInfo');
+            
+            btn.disabled = true;
+            spinner.classList.remove('hidden');
+            status.className = 'status loading';
+            status.classList.remove('hidden');
+            status.textContent = 'Checking your location...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/ip-info`);
+                const data = await response.json();
+                
+                spinner.classList.add('hidden');
+                status.className = 'status success';
+                status.textContent = '✅ Location detected successfully';
+                
+                document.getElementById('locationDetails').innerHTML = `
+                    <p><strong>IP Address:</strong> ${data.ip}</p>
+                    <p><strong>Country:</strong> ${data.country_name} (${data.country_code})</p>
+                    <p><strong>City:</strong> ${data.city}</p>
+                    <p><strong>Region:</strong> ${data.region}</p>
+                    <p><strong>ISP:</strong> ${data.isp}</p>
+                    <p><strong>Status:</strong> ${blockedCountries.some(c => c.countryCode === data.country_code) ? '🚫 BLOCKED' : '✅ ALLOWED'}</p>
+                `;
+                
+                infoDiv.classList.remove('hidden');
+                
+            } catch (error) {
+                spinner.classList.add('hidden');
+                status.className = 'status error';
+                status.textContent = `❌ Error: ${error.message}`;
+            }
+            
+            btn.disabled = false;
+        }
+
+        async function testAPIAccess() {
+            const btn = document.getElementById('testAccessBtn');
+            const resultsDiv = document.getElementById('accessResults');
+            
+            btn.disabled = true;
+            resultsDiv.innerHTML = '<p>Testing API access...</p>';
+            document.getElementById('accessTest').classList.remove('hidden');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/test-access`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultsDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ ACCESS GRANTED</h4>
+                            <p><strong>Message:</strong> ${data.message}</p>
+                            <p><strong>Your IP:</strong> ${data.client_ip}</p>
+                            <p><strong>Country:</strong> ${data.country_code}</p>
+                            <p><strong>Timestamp:</strong> ${data.timestamp}</p>
+                        </div>
+                    `;
+                } else {
+                    const errorData = await response.json();
+                    resultsDiv.innerHTML = `
+                        <div class="error">
+                            <h4>🚫 ACCESS BLOCKED</h4>
+                            <p><strong>Error:</strong> ${errorData.error}</p>
+                            <p><strong>Message:</strong> ${errorData.message}</p>
+                            <p><strong>Your IP:</strong> ${errorData.client_ip}</p>
+                            <p><strong>Country:</strong> ${errorData.country_code}</p>
+                            <p><strong>Blocked At:</strong> ${errorData.blocked_at}</p>
+                            <p><strong>Reason:</strong> ${errorData.reason}</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ CONNECTION ERROR</h4>
+                        <p>Could not connect to API: ${error.message}</p>
+                    </div>
+                `;
+            }
+            
+            btn.disabled = false;
+        }
+
+        // VPN Simulation Functions
+        function showVPNSimulation() {
+            const vpnDiv = document.getElementById('vpnSimulation');
+            vpnDiv.classList.remove('hidden');
+            
+            // Clear previous results
+            document.getElementById('simulationResults').innerHTML = '';
+        }
+
+        async function simulateVPNAccess() {
+            const select = document.getElementById('vpnCountrySelect');
+            const btn = document.getElementById('simulateAccessBtn');
+            const resultsDiv = document.getElementById('simulationResults');
+            const selectedCountry = select.value;
+            
+            if (!selectedCountry) {
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Error</h4>
+                        <p>Please select a country first.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            btn.disabled = true;
+            resultsDiv.innerHTML = '<p>🌐 Simulating VPN connection...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/simulate-vpn`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        country_code: selectedCountry
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Handle both success (200) and blocked (403) responses as valid simulations
+                if (response.ok && data.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ VPN ACCESS SIMULATION SUCCESS</h4>
+                            <p><strong>Message:</strong> ${data.message}</p>
+                            <p><strong>Simulated Country:</strong> ${data.country_name} (${data.country_code})</p>
+                            <p><strong>Simulated IP:</strong> ${data.simulated_ip}</p>
+                            <p><strong>Status:</strong> ${data.is_blocked ? '🚫 BLOCKED' : '✅ ALLOWED'}</p>
+                            <p><strong>Timestamp:</strong> ${data.timestamp}</p>
+                            <div class="note">
+                                <strong>Note:</strong> This simulates connecting from ${data.country_name}. 
+                                The API would ${data.is_blocked ? 'block' : 'allow'} access from this location.
+                            </div>
+                        </div>
+                    `;
+                } else if (response.status === 403 && data.error) {
+                    // Handle blocked country simulation (403 Forbidden is expected for blocked countries)
+                    resultsDiv.innerHTML = `
+                        <div class="warning">
+                            <h4>🚫 VPN ACCESS SIMULATION - BLOCKED</h4>
+                            <p><strong>Message:</strong> ${data.message}</p>
+                            <p><strong>Simulated Country:</strong> ${data.country_name} (${data.country_code})</p>
+                            <p><strong>Simulated IP:</strong> ${data.simulated_ip}</p>
+                            <p><strong>Status:</strong> 🚫 BLOCKED</p>
+                            <p><strong>Reason:</strong> ${data.error}</p>
+                            <p><strong>Timestamp:</strong> ${data.timestamp}</p>
+                            <div class="note">
+                                <strong>Demo Result:</strong> If you were using a VPN from ${data.country_name}, 
+                                your access would be blocked because this country is geo-blocked.
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Handle unexpected errors
+                    resultsDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ UNEXPECTED ERROR</h4>
+                            <p><strong>Status:</strong> ${response.status}</p>
+                            <p><strong>Message:</strong> ${data.message || 'Unknown error'}</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ SIMULATION ERROR</h4>
+                        <p>Could not simulate VPN connection: ${error.message}</p>
+                    </div>
+                `;
+            }
+            
+            btn.disabled = false;
+        }
+
+        // Event listeners for blocking test
+        document.getElementById('checkIPBtn').addEventListener('click', checkMyLocation);
+        document.getElementById('testAccessBtn').addEventListener('click', testAPIAccess);
+        document.getElementById('simulateVPNBtn').addEventListener('click', showVPNSimulation);
+        document.getElementById('simulateAccessBtn').addEventListener('click', simulateVPNAccess);
+        
+        
+        // Initialize
+        updateSelectedCountriesDisplay();
+    </script>
+</body>
+</html>

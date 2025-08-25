@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real IP & VPN Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .ip-info {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #2196f3;
+        }
+        .btn {
+            background: #2196f3;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .btn:hover {
+            background: #1976d2;
+        }
+        .btn.danger {
+            background: #f44336;
+        }
+        .btn.danger:hover {
+            background: #d32f2f;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        .success {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+        .blocked {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+        .loading {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌍 Real VPN Testing Tool</h1>
+        <p>This tool helps you test your geo-blocking system with real VPN connections.</p>
+        
+        <div class="controls">
+            <button class="btn" onclick="checkRealIP()">🔍 Check My Real Location</button>
+            <button class="btn" onclick="testAPIAccess()">🔐 Test API Access</button>
+            <button class="btn danger" onclick="testWithBlockedCountry()">🚫 Test Blocked Access</button>
+        </div>
+        
+        <div id="ipInfo" class="ip-info" style="display: none;">
+            <h3>📍 Your Current Location</h3>
+            <div id="locationDetails"></div>
+        </div>
+        
+        <div id="apiTest" class="status" style="display: none;">
+            <div id="testResults"></div>
+        </div>
+        
+        <div class="instructions">
+            <h2>📋 VPN Testing Instructions</h2>
+            <ol>
+                <li><strong>Baseline Test:</strong> Click "Check My Real Location" to see your current IP and country</li>
+                <li><strong>Block Countries:</strong> Go to your main app and block some countries (e.g., Germany, Russia)</li>
+                <li><strong>Connect VPN:</strong> Use your VPN to connect to a blocked country</li>
+                <li><strong>Test Blocking:</strong> Come back here and click "Test API Access" - should be blocked!</li>
+                <li><strong>Switch Countries:</strong> Try VPN servers from different countries</li>
+            </ol>
+            
+            <div style="background: #fff3e0; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <strong>💡 Pro Tip:</strong> Keep this page open in one tab and your main blocking app in another. 
+                This way you can quickly test after connecting to different VPN servers.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080';
+        
+        async function checkRealIP() {
+            const infoDiv = document.getElementById('ipInfo');
+            const detailsDiv = document.getElementById('locationDetails');
+            
+            try {
+                // First try our local API
+                const localResponse = await fetch(`${API_BASE_URL}/api/ip-info`);
+                if (localResponse.ok) {
+                    const localData = await localResponse.json();
+                    
+                    // Try to get data from external IP service for comparison (with timeout)
+                    let externalData = { ip: 'External service unavailable' };
+                    try {
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+                        
+                        const externalResponse = await fetch('https://api.ipify.org?format=json', {
+                            signal: controller.signal
+                        });
+                        clearTimeout(timeoutId);
+                        
+                        if (externalResponse.ok) {
+                            externalData = await externalResponse.json();
+                        }
+                    } catch (error) {
+                        console.log('External IP service unavailable:', error.message);
+                        externalData = { ip: 'Service timeout (this is normal)' };
+                    }
+                    
+                    detailsDiv.innerHTML = `
+                        <p><strong>🏠 Local API Detection:</strong></p>
+                        <ul>
+                            <li><strong>IP:</strong> ${localData.ip}</li>
+                            <li><strong>Country:</strong> ${localData.country_name} (${localData.country_code})</li>
+                            <li><strong>City:</strong> ${localData.city}</li>
+                            <li><strong>ISP:</strong> ${localData.isp}</li>
+                        </ul>
+                        
+                        <p><strong>🌐 External IP Check:</strong></p>
+                        <ul>
+                            <li><strong>Public IP:</strong> ${externalData.ip}</li>
+                            ${externalData.ip.includes('timeout') || externalData.ip.includes('unavailable') ? 
+                                '<li><small style="color: #666;">ℹ️ External service timeout is normal and doesn\'t affect blocking tests</small></li>' : ''}
+                        </ul>
+                        
+                        <div style="background: #e8f5e8; padding: 10px; border-radius: 5px; margin-top: 15px;">
+                            <strong>✅ Status:</strong> Your local blocking system can see your IP as ${localData.ip}
+                        </div>
+                    `;
+                } else {
+                    throw new Error('Local API not responding');
+                }
+                
+                infoDiv.style.display = 'block';
+                
+            } catch (error) {
+                detailsDiv.innerHTML = `
+                    <div style="background: #ffebee; padding: 10px; border-radius: 5px;">
+                        <strong>❌ Error:</strong> ${error.message}<br>
+                        <small>Make sure your Go server is running on localhost:8080</small>
+                    </div>
+                `;
+                infoDiv.style.display = 'block';
+            }
+        }
+        
+        async function testAPIAccess() {
+            const testDiv = document.getElementById('apiTest');
+            const resultsDiv = document.getElementById('testResults');
+            
+            testDiv.className = 'status loading';
+            testDiv.style.display = 'block';
+            resultsDiv.innerHTML = '🔄 Testing API access from your current location...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/test-access`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    testDiv.className = 'status success';
+                    resultsDiv.innerHTML = `
+                        <h4>✅ ACCESS GRANTED</h4>
+                        <p><strong>Message:</strong> ${data.message}</p>
+                        <p><strong>Your IP:</strong> ${data.client_ip}</p>
+                        <p><strong>Detected Country:</strong> ${data.country_code}</p>
+                        <p><strong>Time:</strong> ${new Date(data.timestamp).toLocaleString()}</p>
+                    `;
+                } else {
+                    const errorData = await response.json();
+                    testDiv.className = 'status blocked';
+                    resultsDiv.innerHTML = `
+                        <h4>🚫 ACCESS BLOCKED</h4>
+                        <p><strong>Reason:</strong> ${errorData.message}</p>
+                        <p><strong>Your IP:</strong> ${errorData.client_ip}</p>
+                        <p><strong>Blocked Country:</strong> ${errorData.country_code}</p>
+                        <p><strong>Blocked At:</strong> ${new Date(errorData.blocked_at).toLocaleString()}</p>
+                        <div style="background: #fff3e0; padding: 10px; border-radius: 5px; margin-top: 10px;">
+                            <strong>🎉 SUCCESS!</strong> Your geo-blocking is working! The system detected you're connecting 
+                            from a blocked country and denied access.
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                testDiv.className = 'status blocked';
+                resultsDiv.innerHTML = `
+                    <h4>❌ CONNECTION ERROR</h4>
+                    <p>Could not connect to API: ${error.message}</p>
+                    <p>Make sure your Go server is running on localhost:8080</p>
+                `;
+            }
+        }
+        
+        async function testWithBlockedCountry() {
+            alert(`
+🎯 Testing with Blocked Country:
+
+1. Make sure you've blocked some countries in your main app
+2. Connect your VPN to one of those blocked countries  
+3. Click "Test API Access" to see if it gets blocked
+4. Try different VPN server locations
+
+Countries commonly used for testing:
+• Germany (DE)
+• Russia (RU) 
+• China (CN)
+• France (FR)
+
+The API should return 403 Forbidden for blocked countries!
+            `);
+        }
+    </script>
+</body>
+</html>

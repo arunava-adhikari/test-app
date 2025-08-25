@@ -1,0 +1,138 @@
+{
+  "testConfigurations": {
+    "basic": {
+      "name": "Basic VPN Test",
+      "description": "Test core geo-blocking functionality",
+      "apiUrl": "http://localhost:8080",
+      "vpnProvider": "auto",
+      "testCountries": ["US", "DE", "GB", "FR"],
+      "blockedCountries": ["DE", "RU"],
+      "headless": false,
+      "slowMo": 1000,
+      "timeout": 30000
+    },
+    
+    "comprehensive": {
+      "name": "Comprehensive VPN Test",
+      "description": "Full test suite with multiple countries",
+      "apiUrl": "http://localhost:8080", 
+      "vpnProvider": "auto",
+      "testCountries": ["US", "DE", "RU", "FR", "GB", "ES", "CN", "AU", "CA"],
+      "blockedCountries": ["DE", "RU", "CN", "IR"],
+      "headless": false,
+      "slowMo": 800,
+      "timeout": 45000
+    },
+    
+    "compliance": {
+      "name": "Compliance Testing",
+      "description": "Test blocking of sanctioned countries",
+      "apiUrl": "http://localhost:8080",
+      "vpnProvider": "auto", 
+      "testCountries": ["RU", "CN", "IR", "KP", "CU"],
+      "blockedCountries": ["RU", "CN", "IR", "KP", "CU"],
+      "headless": false,
+      "slowMo": 1500,
+      "timeout": 60000
+    },
+    
+    "demo": {
+      "name": "Live Demo",
+      "description": "Optimized for live demonstrations",
+      "apiUrl": "http://localhost:8080",
+      "vpnProvider": "expressvpn",
+      "testCountries": ["US", "DE", "ES"],
+      "blockedCountries": ["DE"],
+      "headless": false,
+      "slowMo": 2000,
+      "timeout": 30000,
+      "reportFile": "demo-report.json"
+    },
+    
+    "ci": {
+      "name": "Continuous Integration",
+      "description": "Automated testing for CI/CD pipelines",
+      "apiUrl": "http://localhost:8080",
+      "vpnProvider": "auto",
+      "testCountries": ["US", "DE", "FR"],
+      "blockedCountries": ["DE"],
+      "headless": true,
+      "slowMo": 0,
+      "timeout": 20000,
+      "reportFile": "ci-test-report.json"
+    }
+  },
+  
+  "vpnProviders": {
+    "expressvpn": {
+      "name": "ExpressVPN",
+      "installInstructions": "Download from https://www.expressvpn.com/",
+      "setupCommands": [
+        "expressvpn activate [activation_code]",
+        "expressvpn preferences set auto_connect false"
+      ],
+      "supportedCountries": ["US", "GB", "DE", "FR", "ES", "CA", "AU", "JP"]
+    },
+    
+    "nordvpn": {
+      "name": "NordVPN", 
+      "installInstructions": "Download from https://nordvpn.com/",
+      "setupCommands": [
+        "nordvpn login",
+        "nordvpn set autoconnect off"
+      ],
+      "supportedCountries": ["US", "GB", "DE", "FR", "ES", "CA", "AU", "JP"]
+    },
+    
+    "surfshark": {
+      "name": "Surfshark",
+      "installInstructions": "Download from https://surfshark.com/",
+      "setupCommands": [
+        "surfshark-vpn login",
+        "surfshark-vpn settings --auto-connect off"
+      ],
+      "supportedCountries": ["US", "GB", "DE", "FR", "ES", "CA", "AU"]
+    },
+    
+    "protonvpn": {
+      "name": "ProtonVPN",
+      "installInstructions": "Download from https://protonvpn.com/",
+      "setupCommands": [
+        "protonvpn login [username]",
+        "protonvpn configure"
+      ],
+      "supportedCountries": ["US", "GB", "DE", "FR", "ES", "CA", "CH", "NL"]
+    },
+
+    "eonvpn": {
+      "name": "eonVPN Demo",
+      "description": "Demo configuration optimized for eonVPN",
+      "apiUrl": "http://localhost:8080",
+      "vpnProvider": "eonvpn",
+      "testCountries": ["US", "DE", "GB", "FR"],
+      "blockedCountries": ["DE", "RU"],
+      "headless": false,
+      "slowMo": 1500,
+      "timeout": 30000,
+      "reportFile": "eonvpn-demo-report.json"
+    }
+  },
+  
+  "reporting": {
+    "outputFormats": ["json", "html", "csv"],
+    "includeScreenshots": true,
+    "includeLogs": true,
+    "emailReports": false,
+    "slackNotifications": false
+  },
+  
+  "advanced": {
+    "retryFailedTests": 2,
+    "parallelConnections": false,
+    "connectionStabilityCheck": true,
+    "ipLeakDetection": true,
+    "dnsLeakDetection": true,
+    "performanceMetrics": true
+  }
+}
+

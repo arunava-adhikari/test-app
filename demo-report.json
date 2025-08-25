@@ -1,0 +1,168 @@
+{
+  "testSuite": "Integrated VPN Geo-Blocking Test",
+  "timestamp": "2025-08-21T14:57:55.194Z",
+  "config": {
+    "apiUrl": "http://localhost:8080",
+    "vpnProvider": "expressvpn",
+    "testCountries": [
+      "US",
+      "DE",
+      "ES"
+    ],
+    "blockedCountries": [
+      "DE"
+    ],
+    "headless": false,
+    "slowMo": 2000,
+    "timeout": 30000,
+    "reportFile": "demo-report.json",
+    "name": "Live Demo",
+    "description": "Optimized for live demonstrations"
+  },
+  "vpnProvider": "ExpressVPN",
+  "results": [
+    {
+      "type": "baseline",
+      "data": {
+        "location": {
+          "ip": "43.251.171.131",
+          "country": "IN",
+          "countryName": "India",
+          "city": "Demo City",
+          "region": "Demo Region",
+          "isp": "Demo ISP"
+        },
+        "timestamp": "2025-08-21T14:57:39.057Z"
+      },
+      "timestamp": "2025-08-21T14:57:39.057Z"
+    },
+    {
+      "type": "baseline_access",
+      "data": {
+        "allowed": true,
+        "blocked": false,
+        "status": 200,
+        "data": {
+          "client_ip": "::1",
+          "country_code": "IN",
+          "message": "Access granted! You can access this API.",
+          "server_time": 1755788261,
+          "success": true,
+          "timestamp": "2025-08-21T20:27:41+05:30"
+        }
+      },
+      "timestamp": "2025-08-21T14:57:43.740Z"
+    },
+    {
+      "type": "vpn_test",
+      "data": {
+        "country": "US",
+        "timestamp": "2025-08-21T14:57:48.788Z",
+        "vpnConnection": null,
+        "locationAfterVPN": null,
+        "apiAccess": null,
+        "expectedBlocked": false,
+        "success": false,
+        "error": "VPN connection failed"
+      },
+      "timestamp": "2025-08-21T14:57:48.895Z"
+    },
+    {
+      "type": "vpn_test",
+      "data": {
+        "country": "US",
+        "timestamp": "2025-08-21T14:57:48.788Z",
+        "vpnConnection": null,
+        "locationAfterVPN": null,
+        "apiAccess": null,
+        "expectedBlocked": false,
+        "success": false,
+        "error": "VPN connection failed"
+      },
+      "timestamp": "2025-08-21T14:57:48.929Z"
+    },
+    {
+      "type": "vpn_test",
+      "data": {
+        "country": "DE",
+        "timestamp": "2025-08-21T14:57:50.939Z",
+        "vpnConnection": null,
+        "locationAfterVPN": null,
+        "apiAccess": null,
+        "expectedBlocked": true,
+        "success": false,
+        "error": "VPN connection failed"
+      },
+      "timestamp": "2025-08-21T14:57:51.019Z"
+    },
+    {
+      "type": "vpn_test",
+      "data": {
+        "country": "DE",
+        "timestamp": "2025-08-21T14:57:50.939Z",
+        "vpnConnection": null,
+        "locationAfterVPN": null,
+        "apiAccess": null,
+        "expectedBlocked": true,
+        "success": false,
+        "error": "VPN connection failed"
+      },
+      "timestamp": "2025-08-21T14:57:51.050Z"
+    },
+    {
+      "type": "vpn_test",
+      "data": {
+        "country": "ES",
+        "timestamp": "2025-08-21T14:57:53.059Z",
+        "vpnConnection": null,
+        "locationAfterVPN": null,
+        "apiAccess": null,
+        "expectedBlocked": false,
+        "success": false,
+        "error": "VPN connection failed"
+      },
+      "timestamp": "2025-08-21T14:57:53.150Z"
+    },
+    {
+      "type": "vpn_test",
+      "data": {
+        "country": "ES",
+        "timestamp": "2025-08-21T14:57:53.059Z",
+        "vpnConnection": null,
+        "locationAfterVPN": null,
+        "apiAccess": null,
+        "expectedBlocked": false,
+        "success": false,
+        "error": "VPN connection failed"
+      },
+      "timestamp": "2025-08-21T14:57:53.187Z"
+    }
+  ],
+  "summary": {
+    "totalTests": 6,
+    "successful": 0,
+    "failed": 6,
+    "blocked": 0,
+    "allowed": 0,
+    "vpnProvider": "ExpressVPN",
+    "baselineLocation": {
+      "ip": "43.251.171.131",
+      "country": "IN",
+      "countryName": "India",
+      "city": "Demo City",
+      "region": "Demo Region",
+      "isp": "Demo ISP"
+    },
+    "countriesTested": [
+      "US",
+      "US",
+      "DE",
+      "DE",
+      "ES",
+      "ES"
+    ],
+    "blockedCountries": [
+      "DE"
+    ]
+  }
+}
